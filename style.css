@@ -1,0 +1,326 @@
+*, *::after, *::before { box-sizing: border-box; }
+   
+/* register the --angle property to make it animatable */
+@property --angle {
+  syntax: '<angle>';
+  initial-value: -90deg;
+  inherits: true;
+}
+
+/* hide and show animations */
+@keyframes hide {
+	to {
+		--angle: -90deg;
+    rotate: -135deg;
+    opacity: 0;
+	}
+}
+
+@keyframes show {
+	to {
+		--angle: var(--to__angle);
+    rotate: 0deg;
+    opacity: 1;
+	}
+}
+
+
+:root {
+  --cyan: #6ea3afff;
+  --lightcyan: #6ea3af64;
+  --shadow-1: #999999cc;
+  --shadow-2: #666666ff;
+  --knob-color: #848484;
+  --knob-grad1: #fdfdfd;
+  --knob-grad2: #c8c8c8;
+}
+
+
+
+.dialbtt {
+  --duration: .5s;
+  
+  display: grid;
+  grid-template: 6rem 8rem 6rem / 6rem 8rem 6rem;
+  place-content: center;
+  margin: 1rem auto;
+
+  button {
+    all: unset;
+    cursor: pointer;
+    user-select: none;
+    &:focus {
+      outline-offset: .5rem;
+      outline: .25rem solid var(--cyan);
+    }
+  }
+  
+  
+  /* this is the knob style */
+  .dialbtt__knob {
+    position: relative;
+    z-index: 1;
+    grid-area: 2 / 2 / 3 / 3 ;
+    border-radius: 50%;
+    border: 1px #d4d4d4 solid;
+    border: .65rem solid #d4d4d4;
+    box-shadow: 
+        0 -.1rem .25rem var(--shadow-1),
+        0 0 0 .75rem #efefef,
+        0 var(--bottom-shadow) 
+          var(--bottom-shadow-radius) 
+          var(--shadow-2);
+
+    overflow: hidden;
+    transition: box-shadow calc(var(--duration) / 2) var(--delay);
+    aspect-ratio: 1;
+    
+    &::before, &::after {
+       content: "";
+       position: absolute;
+       inset: 0;
+    }
+
+    /* backgroun of the knob: this should be always darker at 
+     * the bottom, even when it is rotated. So it has been
+     * placed in an absolute pseudoelement.
+     */
+    &::before {
+       background-image: linear-gradient(
+          150deg, var(--knob-grad1), var(--knob-grad2));
+    }
+
+    /* dark line over the knob. 
+     * this is what is actually rotating (if we rotated the knob
+     * its bottom shadow would rotate as well)
+     */
+    &::after {
+       padding: 10% calc(50% - 2px) calc(90% - 1rem) ;
+       background-clip: content-box;
+       background-image: linear-gradient(
+          var(--knob-color), var(--knob-color));
+       rotate: var(--knob-rotation, 0deg);
+       transition: rotate .5s;
+    }
+    
+    &:is(:hover, :focus)::after  {
+       --knob-color: var(--cyan);
+    }
+
+    span {
+       clip-path: inset(50%);
+       overflow: hidden;
+       position: absolute;
+       block-size: 1px;
+       clip: rect(1px 1px 1px 1px);
+    }
+  }
+
+  /* this is the list style */
+  .dialbtt__list {
+    position: relative;
+    grid-area: 1 / 1 / 4 / 4;
+    padding: 0;
+    list-style: none;
+    margin: var(--margin);
+    border-radius: 50%;
+    overflow: hidden;
+    aspect-ratio: 1;
+    background: #e4e4e4;
+    transition: margin var(--duration) var(--delay);
+    box-shadow: 0 0 1.25rem var(--shadow-1);
+
+    li {
+       --angle: -90deg;
+       --size: 3em;
+
+       opacity: var(--opacity);
+       rotate: var(--rotate);
+       position: absolute;
+       z-index: 10;
+       top: 50%;
+       left: 50%;
+       padding: .5rem;
+      
+       /* trigonometry in CSS is rad!
+          (small Note: if you use rem inside the
+          following calc it doesn't work on 
+          Safari. why?)
+        */
+       translate: calc(7.3em * Cos(var(--angle)))
+                calc(7.3em * Sin(var(--angle)));
+      
+       margin: calc(var(--size) / -2) 0 0 calc(var(--size) / -2);
+       inline-size: var(--size);
+       block-size: var(--size);
+       border-radius: 50%;
+          
+    }
+
+
+    button {
+      --bg: #dddddd00;
+      opacity: .35;
+      border-radius: 50%;
+      block-size: 100%;
+      transition: opacity .33s;
+      color: #000;
+      transition: box-shadow .33s;
+      box-shadow: 
+          inset 0 0 0 1rem var(--bg),
+          0 0 0 .75rem var(--bg);
+      
+      &:hover:not(:focus) {
+        --bg: #ddddddff;
+      }
+
+      &:hover, &:focus {
+        opacity: 1;
+        color: var(--cyan);
+      }
+     
+      svg {
+        
+        block-size: 100%;
+        aspect-ratio: 1;
+      }
+    }
+  }
+
+
+  &:has(li:focus-within) .dialbtt__knob {
+    outline-offset: .5rem;
+    outline: .25rem solid var(--lightcyan);
+    &::after {
+      --knob-color: var(--cyan);
+    }
+  }
+  &:has(li:nth-child(1):focus-within) { --knob-rotation: 0deg;   }
+  &:has(li:nth-child(2):focus-within) { --knob-rotation: 60deg;  }
+  &:has(li:nth-child(3):focus-within) { --knob-rotation: 120deg; }
+  &:has(li:nth-child(4):focus-within) { --knob-rotation: 180deg; }
+  &:has(li:nth-child(5):focus-within) { --knob-rotation: 240deg; }
+  &:has(li:nth-child(6):focus-within) { --knob-rotation: 300deg; }
+
+
+  /* style and properties when the list is opened */
+  &:has([aria-expanded="true"]) {
+
+    --bottom-shadow: .5rem;
+    --bottom-shadow-radius: .75rem;      
+    --delay: 0s;
+
+    .dialbtt__list {      
+      --margin: 0;
+      --delay: 0s;
+
+      li {
+        --delay: .5s;
+        --rotate: -135deg;
+        --opacity: 0;
+        
+        &:nth-child(1) { --to__angle: -90deg; }
+        &:nth-child(2) { --to__angle: -30deg; }
+        &:nth-child(3) { --to__angle: 30deg; }
+        &:nth-child(4) { --to__angle: 90deg; }
+        &:nth-child(5) { --to__angle: 150deg; }
+        &:nth-child(6) { --to__angle: 210deg; }
+        animation: calc(var(--duration) * 1.25) show var(--delay) forwards;
+      }
+    }   
+  }
+
+  /* style and properties when the list is closed */
+  &:has([aria-expanded="false"]) {
+    
+    --bottom-shadow: 0;
+    --bottom-shadow-radius: 0; 
+    --delay: 1s;
+    
+    .dialbtt__list {
+      --delay: .5s;
+      --margin: 50%;
+    
+      li {
+        --rotate: 0deg;
+        --opacity: 1;
+        
+        &:nth-child(1) { --angle: -90deg; }
+        &:nth-child(2) { --angle: -30deg; }
+        &:nth-child(3) { --angle: 30deg; }
+        &:nth-child(4) { --angle: 90deg; }
+        &:nth-child(5) { --angle: 150deg; }
+        &:nth-child(6) { --angle: 210deg; }
+        animation: calc(var(--duration) * 1.25) hide 0s forwards;
+      }
+    }
+  }
+  
+}
+
+
+
+/* just centering things and setting a nice background */
+
+body {
+   display: grid;
+   min-block-size: 100vh;
+   place-content: center;
+   background: linear-gradient(45deg, #d39331, #caa4d5);
+}
+
+.modal {
+  display: none;
+  position: fixed;
+  text-align: center;
+  z-index: 20;
+  inline-size: min(80%, 60ch);
+  inset: 50% 0 0 50%;
+  background: #f9f9f9;
+  border: .3rem var(--cyan) solid;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 0 0 50vmax var(--shadow-1);
+  transform: translate(-50%, -50%);
+}
+
+
+p { 
+  font: 1.1rem/1.7 "Inter";
+  letter-spacing: -0.02rem;
+  text-align: center; 
+  color: #fff;
+  margin: 1rem;
+  max-inline-size: 50ch;
+  
+  a {
+    color: #e2e5f2;
+    &:focus {
+      outline: 3px solid;
+      outline-offset: 3px;
+    }
+  }
+  
+  code {
+    background: #f2f7fd;
+    padding: .25rem .6rem;
+    color: var(--cyan);
+    border-radius: .4rem;
+    border: 1px #d8dce6 solid;
+  }
+}
+
+
+/* check .has() support */
+@supports not selector(:has(+ *)) {
+  .modal {
+    display: block;
+  }
+}
+
+/* check Houdini APIs support */
+@supports not (background: paint(something))  {
+  .modal {
+    display: block;
+  }
+}
